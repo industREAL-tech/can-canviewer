@@ -1,0 +1,525 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:industREAL.CAN.CanViewer.ViewModels"
+		xmlns:ae="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
+        xmlns:utils="clr-namespace:industREAL.CAN.CanViewer.Utils"
+        x:Class="industREAL.CAN.CanViewer.MainWindow"
+        x:DataType="vm:CanDataGridViewModel"
+        mc:Ignorable="d"
+        Width="1240" Height="700"
+        Title="industREAL CAN Viewer"
+        x:Name="Root">
+	<Window.Background>#333333</Window.Background>
+	<!-- Resources: icons + converters + flyouts -->
+	<Window.Resources>
+		<!-- Icons -->
+		<StreamGeometry x:Key="SemiIconHome">M4,12 L12,4 L20,12 V20 H14 V14 H10 V20 H4 Z</StreamGeometry>
+		<!-- Needed by status strip and connect button -->
+		<!-- <StreamGeometry x:Key="SemiIconLink">M10,4 L14,4 14,6 10,6 6,10 6,14 4,14 4,10z M14,10 18,6 20,6 20,10 16,14 12,14 12,12 15,12 18,9 18,8 17,8 14,11z</StreamGeometry> -->
+
+		<!-- Converters -->
+		<utils:HexBytesConverter x:Key="HexBytesConverter" />
+		<utils:BoolToBrushConverter x:Key="BoolToBrushConverter"
+									TrueBrush="#2D8C3C"
+									FalseBrush="#8C2D2D"/>
+		<utils:FlagToBrushConverter x:Key="FlagToBrushConverter"/>
+		<utils:FlagToForegroundBrushConverter x:Key="FlagToForegroundBrushConverter"/>
+
+		<!-- Row flyout -->
+		<MenuFlyout x:Key="RowContextFlyout">
+			<MenuItem Header="Standard _Menu Item" HotKey="Ctrl+A"
+					  Command="{Binding #Root.DataContext.AddCommand}"
+					  CommandParameter="{Binding .}"/>
+			<MenuItem Header="_Disabled Menu Item" HotKey="Ctrl+D" IsEnabled="False"/>
+			<Separator/>
+			<MenuItem Header="Menu with _Submenu">
+				<MenuItem Header="Submenu _1"
+						  Command="{Binding #Root.DataContext.Submenu1Command}"
+						  CommandParameter="{Binding .}"/>
+				<MenuItem Header="Submenu _2"
+						  Command="{Binding #Root.DataContext.Submenu2Command}"
+						  CommandParameter="{Binding .}"/>
+			</MenuItem>
+			<MenuItem Header="Menu Item with _Icon">
+				<MenuItem.Icon>
+					<CheckBox Padding="0" BorderThickness="0"
+							  IsChecked="True" IsHitTestVisible="False"/>
+				</MenuItem.Icon>
+			</MenuItem>
+		</MenuFlyout>
+
+		<!-- Grid/background flyout -->
+		<MenuFlyout x:Key="GridContextFlyout">
+			<MenuItem Header="_Add new…" HotKey="Ctrl+N"
+					  Command="{Binding #Root.DataContext.AddNewCommand}"/>
+			<MenuItem Header="_Paste"
+					  Command="{Binding #Root.DataContext.PasteCommand}"/>
+			<Separator/>
+			<MenuItem Header="_Settings…"
+					  Command="{Binding #Root.DataContext.OpenSettingsCommand}"/>
+		</MenuFlyout>
+	</Window.Resources>
+
+	<!-- Layout -->
+	<Grid RowDefinitions="Auto,Auto,*,Auto">
+
+		<!-- Menu -->
+		<Menu Grid.Row="0" Background="#28323E">
+			<MenuItem Header="_File">
+				<MenuItem Header="E_xit" />
+			</MenuItem>
+			<MenuItem Header="CAN">
+				<MenuItem Header="CAN" />
+			</MenuItem>
+			<MenuItem Header="Edit">
+				<MenuItem Header="CAN" />
+			</MenuItem>
+			<MenuItem Header="Transmit">
+				<MenuItem Header="CAN" />
+			</MenuItem>
+		</Menu>
+
+		<!-- Icon bar -->
+		<Border Grid.Row="1"
+				Margin="10"
+				Padding="2"
+				CornerRadius="8"
+				Background="#20262F"
+				BorderBrush="#444A50"
+				BorderThickness="1">
+			<StackPanel Orientation="Horizontal" Spacing="12" Height="42" >
+
+				<!-- Open (placeholder) -->
+				<Button Theme="{DynamicResource OutlineButton}" Classes="Tertiary" Padding="0" Margin="0">
+					<PathIcon Width="30" Height="30" Data="{StaticResource SemiIconFolderOpen}" />
+				</Button>
+
+				<!-- Save (bind to Status.SaveCommand if desired) -->
+				<Button Theme="{DynamicResource OutlineButton}" Classes="Tertiary" Padding="0" Margin="0"
+						Command="{Binding Status.SaveCommand}">
+					<PathIcon Width="30" Height="30" Foreground="#66CCFF" Data="{StaticResource SemiIconSave}" />
+				</Button>
+
+				<!-- Connect -->
+				<Button Theme="{DynamicResource OutlineButton}" Classes="Tertiary" Padding="0" Margin="0"
+						Command="{Binding Status.ConnectCommand}">
+					<PathIcon Width="30" Height="30" Foreground="#66CCFF" Data="{StaticResource SemiIconLink}" />
+				</Button>
+
+				<!-- Open single-instance tool window (pass owner Window) -->
+				<Button Theme="{DynamicResource OutlineButton}" Classes="Tertiary" Padding="0" Margin="0"
+						Command="{Binding Status.OpenDeviceSelectorDialogCommand}"
+						CommandParameter="{Binding #Root}">
+					<PathIcon Width="30" Height="30" Foreground="#66CCFF" Data="{StaticResource SemiIconFolderOpen}" />
+				</Button>
+
+				<!-- Disconnect -->
+				<Button Theme="{DynamicResource OutlineButton}" Classes="Tertiary" Padding="0" Margin="0"
+						Command="{Binding Status.DisconnectCommand}">
+					<PathIcon Width="30" Height="30" Foreground="#66CCFF" Data="{StaticResource SemiIconUnlink}" />
+				</Button>
+
+				<!-- Refresh -->
+				<Button Theme="{DynamicResource OutlineButton}" Classes="Tertiary" Padding="0" Margin="0"
+						Command="{Binding Status.RefreshCommand}">
+					<PathIcon Width="30" Height="30" Foreground="#FF8C00" Data="{StaticResource SemiIconRefresh}" />
+				</Button>
+
+				<!-- Mail -->
+				<Button Theme="{DynamicResource OutlineButton}" Classes="Tertiary" Padding="0" Margin="0">
+					<PathIcon Width="30" Height="30" Foreground="#FF8C00" Data="{StaticResource SemiIconMailStroked1}" />
+				</Button>
+				
+				<Button Theme="{DynamicResource OutlineButton}" Classes="Tertiary" Padding="0" Margin="0">
+					<PathIcon Width="30" Height="30" Foreground="#FF8C00" Data="{StaticResource SemiIconEdit}" />
+				</Button>
+				<Button Theme="{DynamicResource OutlineButton}" Classes="Tertiary" Padding="0" Margin="0">
+					<PathIcon Width="30" Height="30" Data="{StaticResource SemiIconScissors}" />
+				</Button>
+				<Button Theme="{DynamicResource OutlineButton}" Classes="Tertiary" Padding="0" Margin="0">
+					<PathIcon Width="30" Height="30" Data="{StaticResource SemiIconCopy}" />
+				</Button>
+				<Button Theme="{DynamicResource OutlineButton}" Classes="Tertiary" Padding="0" Margin="0">
+					<PathIcon Width="30" Height="30" Data="{StaticResource SemiIconCopyAdd}" />
+				</Button>
+				<Button Theme="{DynamicResource OutlineButton}" Classes="Tertiary" Padding="0" Margin="0">
+					<PathIcon Width="30" Height="30" Data="{StaticResource SemiIconPlay}" />
+				</Button>
+				<Button Theme="{DynamicResource OutlineButton}" Classes="Tertiary" Padding="0" Margin="0">
+					<PathIcon Width="30" Height="30" Data="{StaticResource SemiIconPause}" />
+				</Button>
+				<Button Theme="{DynamicResource OutlineButton}" Classes="Tertiary" Padding="0" Margin="0">
+					<PathIcon Width="30" Height="30" Data="{StaticResource SemiIconStop}" />
+				</Button>
+			</StackPanel>
+		</Border>
+
+		<!-- Tabs -->
+		<TabControl Grid.Row="2" x:Name="MainTabs">
+			<TabItem Header="Send/Receive">
+				<Grid RowDefinitions="*,Auto,*">
+
+					<!-- TOP GRID -->
+					<Border Grid.Row="0"
+							Margin="12"
+							CornerRadius="8"
+							Background="#28323E"
+							BorderBrush="#888888"
+							BorderThickness="1"
+							ClipToBounds="True">
+						<Grid ColumnDefinitions="Auto,*">
+							<!-- Vertical label -->
+							<Border Background="#222933" Width="32">
+								<TextBlock Text="Receive"
+										   Foreground="#FFFFFF"
+										   FontWeight="SemiBold"
+										   VerticalAlignment="Center"
+										   HorizontalAlignment="Center">
+									<TextBlock.RenderTransform>
+										<RotateTransform Angle="-90"/>
+									</TextBlock.RenderTransform>
+								</TextBlock>
+							</Border>
+
+							<!-- DataGrid -->
+							<DataGrid Grid.Column="1"
+									  x:Name="CanRxGrid"
+									  AutoGenerateColumns="False"
+									  CanUserReorderColumns="True"
+									  CanUserResizeColumns="True"
+									  CanUserSortColumns="True"
+									  HeadersVisibility="All"
+									  IsReadOnly="True"
+									  ItemsSource="{Binding Frames}"
+									  GridLinesVisibility="All"
+									  RowHeight="28"
+									  Background="Transparent"
+									  Foreground="#FFFFFF">
+								<DataGrid.ContextFlyout>
+									<StaticResource ResourceKey="GridContextFlyout"/>
+								</DataGrid.ContextFlyout>
+								<DataGrid.Styles>
+									<Style Selector="DataGridRow">
+										<Setter Property="ContextFlyout">
+											<Setter.Value>
+												<StaticResource ResourceKey="RowContextFlyout"/>
+											</Setter.Value>
+										</Setter>
+									</Style>
+								</DataGrid.Styles>
+
+								<DataGrid.Columns>
+									<DataGridTextColumn Width="0.4*" Binding="{Binding canFrame._canID}" Header="CAN ID"/>
+
+									<!-- FLAGS column from CanFrameModel.flagsStr -->
+									<DataGridTemplateColumn Header="Flags" Width="0.38*">
+										<DataGridTemplateColumn.CellTemplate>
+											<DataTemplate x:DataType="{x:Null}">
+												<ItemsControl ItemsSource="{Binding flagsStr}">
+													<ItemsControl.ItemsPanel>
+														<ItemsPanelTemplate>
+															<StackPanel Orientation="Horizontal"/>
+														</ItemsPanelTemplate>
+													</ItemsControl.ItemsPanel>
+													<ItemsControl.ItemTemplate>
+														<DataTemplate x:DataType="{x:Null}">
+															<Border CornerRadius="8"
+																	Padding="5,5"
+																	Margin="2,4,2,4"
+																	Background="{Binding ., Converter={StaticResource FlagToBrushConverter}}">
+																<TextBlock Text="{Binding .}"
+																		   FontSize="11"
+																		   FontWeight="SemiBold"
+																		   Foreground="{Binding ., Converter={StaticResource FlagToForegroundBrushConverter}}"/>
+															</Border>
+														</DataTemplate>
+													</ItemsControl.ItemTemplate>
+												</ItemsControl>
+											</DataTemplate>
+										</DataGridTemplateColumn.CellTemplate>
+									</DataGridTemplateColumn>
+
+									<DataGridTextColumn Width="0.2*" Binding="{Binding canFrame._dataLength}" Header="Length"/>
+									<DataGridTextColumn Width="0.3*" Binding="{Binding canFrame._frameID}" Header="Cycle Time"/>
+									<DataGridTextColumn Width="1.4*" Binding="{Binding canFrame._data, Converter={StaticResource HexBytesConverter}}" Header="Data (hex)"/>
+									<DataGridTextColumn Width="0.3*" Binding="{Binding canFrame._frameID}" Header="Count"/>
+								</DataGrid.Columns>
+							</DataGrid>
+						</Grid>
+					</Border>
+
+					<!-- Splitter -->
+					<GridSplitter Grid.Row="1"
+								  Height="6"
+								  HorizontalAlignment="Stretch"
+								  VerticalAlignment="Center"
+								  Background="#555A60"
+								  CornerRadius="3"
+								  ShowsPreview="True"
+								  ResizeDirection="Rows"
+								  Cursor="SizeNorthSouth" />
+
+					<!-- BOTTOM GRID -->
+					<Border Grid.Row="2"
+							Margin="12"
+							CornerRadius="8"
+							Background="#28323E"
+							BorderBrush="#888888"
+							BorderThickness="1"
+							ClipToBounds="True">
+						<Grid ColumnDefinitions="Auto,*">
+							<!-- Vertical label -->
+							<Border Background="#222933" Width="32">
+								<TextBlock Text="Transmit"
+										   Foreground="#FFFFFF"
+										   FontWeight="SemiBold"
+										   VerticalAlignment="Center"
+										   HorizontalAlignment="Center">
+									<TextBlock.RenderTransform>
+										<RotateTransform Angle="-90"/>
+									</TextBlock.RenderTransform>
+								</TextBlock>
+							</Border>
+
+							<!-- DataGrid -->
+							<DataGrid Grid.Column="1"
+									  x:Name="CanTxGrid"
+									  AutoGenerateColumns="False"
+									  CanUserReorderColumns="True"
+									  CanUserResizeColumns="True"
+									  CanUserSortColumns="True"
+									  HeadersVisibility="All"
+									  IsReadOnly="True"
+									  ItemsSource="{Binding Frames}"
+									  GridLinesVisibility="All"
+									  RowHeight="28"
+									  Background="Transparent"
+									  Foreground="#FFFFFF">
+								<DataGrid.ContextFlyout>
+									<StaticResource ResourceKey="GridContextFlyout"/>
+								</DataGrid.ContextFlyout>
+								<DataGrid.Styles>
+									<Style Selector="DataGridRow">
+										<Setter Property="ContextFlyout">
+											<Setter.Value>
+												<StaticResource ResourceKey="RowContextFlyout"/>
+											</Setter.Value>
+										</Setter>
+									</Style>
+								</DataGrid.Styles>
+
+								<DataGrid.Columns>
+									<DataGridTextColumn Width="0.4*" Binding="{Binding canFrame._canID}" Header="CAN ID"/>
+
+									<!-- FLAGS column from CanFrameModel.flagsStr -->
+									<DataGridTemplateColumn Header="Flags" Width="0.5*">
+										<DataGridTemplateColumn.CellTemplate>
+											<DataTemplate x:DataType="{x:Null}">
+												<ItemsControl ItemsSource="{Binding flagsStr}">
+													<ItemsControl.ItemsPanel>
+														<ItemsPanelTemplate>
+															<StackPanel Orientation="Horizontal"/>
+														</ItemsPanelTemplate>
+													</ItemsControl.ItemsPanel>
+													<ItemsControl.ItemTemplate>
+														<DataTemplate x:DataType="{x:Null}">
+															<Border CornerRadius="8"
+																	Padding="5,5"
+																	Margin="2,4,2,4"
+																	Background="{Binding ., Converter={StaticResource FlagToBrushConverter}}">
+																<TextBlock Text="{Binding .}"
+																		   FontSize="11"
+																		   FontWeight="SemiBold"
+																		   Foreground="{Binding ., Converter={StaticResource FlagToForegroundBrushConverter}}"/>
+															</Border>
+														</DataTemplate>
+													</ItemsControl.ItemTemplate>
+												</ItemsControl>
+											</DataTemplate>
+										</DataGridTemplateColumn.CellTemplate>
+									</DataGridTemplateColumn>
+
+									<DataGridTextColumn Width="0.2*" Binding="{Binding canFrame._dataLength}" Header="Length"/>
+									<DataGridTextColumn Width="0.3*" Binding="{Binding canFrame._frameID}" Header="Cycle Time"/>
+									<DataGridTextColumn Width="1.4*" Binding="{Binding canFrame._data, Converter={StaticResource HexBytesConverter}}" Header="Data (hex)"/>
+									<DataGridTextColumn Width="0.3*" Binding="{Binding comment}" Header="Comment"/>
+								</DataGrid.Columns>
+							</DataGrid>
+						</Grid>
+					</Border>
+
+				</Grid>
+			</TabItem>
+
+			<TabItem Header="Trace">
+				<Border Grid.Row="0"
+						Margin="12"
+						CornerRadius="8"
+						Background="#28323E"
+						BorderBrush="#888888"
+						BorderThickness="1"
+						ClipToBounds="True">
+					<Grid ColumnDefinitions="Auto,*">
+						<!-- Vertical label -->
+						<Border Background="#222933" Width="32">
+							<TextBlock Text="Trace"
+									   Foreground="#FFFFFF"
+									   FontWeight="SemiBold"
+									   VerticalAlignment="Center"
+									   HorizontalAlignment="Center">
+								<TextBlock.RenderTransform>
+									<RotateTransform Angle="-90"/>
+								</TextBlock.RenderTransform>
+							</TextBlock>
+						</Border>
+
+						<!-- DataGrid -->
+						<DataGrid Grid.Column="1"
+								  x:Name="CanRAWRxGrid"
+								  AutoGenerateColumns="False"
+								  CanUserReorderColumns="True"
+								  CanUserResizeColumns="True"
+								  CanUserSortColumns="True"
+								  HeadersVisibility="All"
+								  IsReadOnly="True"
+								  ItemsSource="{Binding Frames}"
+								  GridLinesVisibility="All"
+								  RowHeight="28"
+								  Background="Transparent"
+								  Foreground="#FFFFFF">
+							<DataGrid.ContextFlyout>
+								<StaticResource ResourceKey="GridContextFlyout"/>
+							</DataGrid.ContextFlyout>
+							<DataGrid.Styles>
+								<Style Selector="DataGridRow">
+									<Setter Property="ContextFlyout">
+										<Setter.Value>
+											<StaticResource ResourceKey="RowContextFlyout"/>
+										</Setter.Value>
+									</Setter>
+								</Style>
+							</DataGrid.Styles>
+
+							<DataGrid.Columns>
+								<DataGridTextColumn Width="0.4*" Binding="{Binding canFrame._canID}" Header="CAN ID"/>
+
+								<!-- FLAGS column from CanFrameModel.flagsStr -->
+								<DataGridTemplateColumn Header="Flags" Width="0.38*">
+									<DataGridTemplateColumn.CellTemplate>
+										<DataTemplate x:DataType="{x:Null}">
+											<ItemsControl ItemsSource="{Binding flagsStr}">
+												<ItemsControl.ItemsPanel>
+													<ItemsPanelTemplate>
+														<StackPanel Orientation="Horizontal"/>
+													</ItemsPanelTemplate>
+												</ItemsControl.ItemsPanel>
+												<ItemsControl.ItemTemplate>
+													<DataTemplate x:DataType="{x:Null}">
+														<Border CornerRadius="8"
+																Padding="5,5"
+																Margin="2,4,2,4"
+																Background="{Binding ., Converter={StaticResource FlagToBrushConverter}}">
+															<TextBlock Text="{Binding .}"
+																	   FontSize="11"
+																	   FontWeight="SemiBold"
+																	   Foreground="{Binding ., Converter={StaticResource FlagToForegroundBrushConverter}}"/>
+														</Border>
+													</DataTemplate>
+												</ItemsControl.ItemTemplate>
+											</ItemsControl>
+										</DataTemplate>
+									</DataGridTemplateColumn.CellTemplate>
+								</DataGridTemplateColumn>
+
+								<DataGridTextColumn Width="0.2*" Binding="{Binding canFrame._dataLength}" Header="Length"/>
+								<DataGridTextColumn Width="0.3*" Binding="{Binding canFrame._frameID}" Header="Cycle Time"/>
+								<DataGridTextColumn Width="1.4*" Binding="{Binding canFrame._data, Converter={StaticResource HexBytesConverter}}" Header="Data (hex)"/>
+								<DataGridTextColumn Width="0.3*" Binding="{Binding canFrame._frameID}" Header="Count"/>
+							</DataGrid.Columns>
+						</DataGrid>
+					</Grid>
+				</Border>
+			</TabItem>
+
+			<TabItem Header="Script editor">
+				<DockPanel>
+					<ae:TextEditor x:Name="Editor"
+											 AttachedToVisualTree="Editor_OnAttached"
+											 FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+											 HorizontalScrollBarVisibility="Auto"
+											 VerticalScrollBarVisibility="Visible"
+											 FontWeight="Light"
+											 FontSize="16"
+											 ShowLineNumbers="True" />
+				</DockPanel>
+				<!--<Border Margin="12"
+						CornerRadius="8"
+						Background="#1E1E1E"
+						BorderBrush="#888888"
+						BorderThickness="1"
+						ClipToBounds="True">
+					<ae:TextEditor x:Name="Editor"
+								   ShowLineNumbers="True"
+								   FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+								   FontSize="14"
+								   Background="#1E1E1E"
+								   Foreground="#FFFFFF"
+								   HorizontalScrollBarVisibility="Auto"
+								   VerticalScrollBarVisibility="Auto"
+								   Text="function hello() { console.log('hi'); }" />
+				</Border> -->
+			</TabItem>
+
+		</TabControl>
+
+		<!-- Status Strip -->
+		<Border Grid.Row="3"
+				Margin="10,10,10,0"
+				Padding="6"
+				CornerRadius="10,10,0,0"
+				Background="#20262F"
+				BorderBrush="#444A50"
+				BorderThickness="1"
+				HorizontalAlignment="Stretch"
+				VerticalAlignment="Bottom">
+			<Grid ColumnDefinitions="Auto,10,*,Auto,10,Auto,10,Auto">
+				<Border CornerRadius="8" Padding="6,2"
+						Background="{Binding Status.Connected, Converter={StaticResource BoolToBrushConverter}}">
+					<StackPanel Orientation="Horizontal" Spacing="6">
+						<PathIcon Width="16" Height="16" Data="{StaticResource SemiIconLink}"/>
+						<TextBlock Text="{Binding Status.ConnectionLabel, FallbackValue=Disconnected}" />
+					</StackPanel>
+				</Border>
+
+				<Rectangle Grid.Column="1" Width="10" Fill="Transparent"/>
+
+				<TextBlock Grid.Column="2"
+						   VerticalAlignment="Center"
+						   Text="{Binding Status.StatusText, FallbackValue=Ready}"
+						   Foreground="#D0D6DC" />
+
+				<StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+					<TextBlock Text="RX:" Opacity="0.7"/>
+					<TextBlock Text="{Binding Status.RxCount, FallbackValue=0}" FontWeight="SemiBold"/>
+				</StackPanel>
+
+				<Rectangle Grid.Column="4" Width="10" Fill="Transparent"/>
+
+				<StackPanel Grid.Column="5" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+					<TextBlock Text="TX:" Opacity="0.7"/>
+					<TextBlock Text="{Binding Status.TxCount, FallbackValue=0}" FontWeight="SemiBold"/>
+				</StackPanel>
+
+				<Rectangle Grid.Column="6" Width="10" Fill="Transparent"/>
+
+				<StackPanel Grid.Column="7" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+					<TextBlock Text="Rate:" Opacity="0.7"/>
+					<TextBlock Text="{Binding Status.UpdateRateHz, StringFormat={}{0:0.0} Hz, FallbackValue=0.0}" FontWeight="SemiBold"/>
+				</StackPanel>
+			</Grid>
+		</Border>
+
+	</Grid>
+</Window>

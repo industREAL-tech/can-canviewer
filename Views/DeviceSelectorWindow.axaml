@@ -1,0 +1,37 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="industREAL.CAN.CanViewer.Views.DeviceSelectorWindow"
+        Width="500" Height="320"
+        Title="Settings"
+        CanResize="True">
+	<Grid Margin="2">
+		
+		<Border Grid.Row="0"
+				Margin="4"
+				CornerRadius="8"
+				Background="#28323E"
+				BorderBrush="#888888"
+				BorderThickness="1"
+				ClipToBounds="True">
+			<Grid ColumnDefinitions="Auto,*">
+				
+				<!-- Vertical label -->
+				<Border Background="#222933" Width="32">
+					<TextBlock Text="Receive"
+							   Foreground="#FFFFFF"
+							   FontWeight="SemiBold"
+							   VerticalAlignment="Center"
+							   HorizontalAlignment="Center">
+						<TextBlock.RenderTransform>
+							<RotateTransform Angle="-90"/>
+						</TextBlock.RenderTransform>
+					</TextBlock>
+				</Border>
+
+
+					
+			</Grid>
+		</Border>
+
+	</Grid>
+</Window>
