@@ -28,7 +28,7 @@
 					</TextBlock>
 				</Border>
 
-
+				<Grid Name="DeviceTreeContainer" />
 					
 			</Grid>
 		</Border>
