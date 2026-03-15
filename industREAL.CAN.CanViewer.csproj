@@ -24,6 +24,7 @@
     <PackageReference Include="Semi.Avalonia" Version="11.3.7" />
 	<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 	<PackageReference Include="TextMateSharp.Grammars" Version="1.0.70" />
+	<PackageReference Include="System.Management" Version="10.0.3" />
   </ItemGroup>
 
   <ItemGroup>
