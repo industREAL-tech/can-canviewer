@@ -400,3 +400,8 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 /debug_canview
+
+# Local publish / debug output (do not commit)
+debug_*/
+*.zip
+publish/

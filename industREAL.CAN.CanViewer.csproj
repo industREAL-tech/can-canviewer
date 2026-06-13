@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\industREAL.CAN.CORE\industREAL.CAN.CORE.csproj" />
+    <PackageReference Include="industREAL.CAN.CORE" Version="0.1.0" />
   </ItemGroup>
 
   <ItemGroup>
